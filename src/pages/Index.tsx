@@ -7,41 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search } from "lucide-react";
 
-const INITIAL_APPS: App[] = [
-  {
-    id: "1",
-    name: "Portainer",
-    icon: "🐳",
-    primaryLink: "https://portainer.io",
-    category: "DevOps",
-    tags: ["docker", "containers"],
-    description: "Container management platform",
-  },
-  {
-    id: "2",
-    name: "Grafana",
-    icon: "📊",
-    primaryLink: "https://grafana.com",
-    category: "Monitoring",
-    tags: ["analytics", "dashboards"],
-    description: "Observability and monitoring",
-  },
-  {
-    id: "3",
-    name: "Jenkins",
-    icon: "🔧",
-    primaryLink: "https://jenkins.io",
-    category: "CI/CD",
-    tags: ["automation", "builds"],
-    description: "Continuous integration server",
-  },
-];
+const INITIAL_APPS: App[] = [];
 
 const Index = () => {
   const [apps, setApps] = useState<App[]>(INITIAL_APPS);
   const [companySettings, setCompanySettings] = useState<CompanySettingsType>({
     name: "Flying Pluto",
-    logo: "🪐",
+    logo: "",
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -97,7 +69,7 @@ const Index = () => {
             />
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 justify-center">
             <Badge
               variant={selectedCategory === null ? "default" : "outline"}
               className="cursor-pointer transition-all hover:scale-105"
@@ -105,7 +77,7 @@ const Index = () => {
             >
               All Apps ({apps.length})
             </Badge>
-            {categories.map((category) => (
+            {["DevOps", "Dashboards", "Monitoring", "Management"].map((category) => (
               <Badge
                 key={category}
                 variant={selectedCategory === category ? "default" : "outline"}
@@ -129,10 +101,12 @@ const Index = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredApps.map((app) => (
-              <AppCard key={app.id} app={app} onDelete={handleDeleteApp} />
-            ))}
+          <div className="flex justify-center">
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 max-w-7xl">
+              {filteredApps.map((app) => (
+                <AppCard key={app.id} app={app} onDelete={handleDeleteApp} />
+              ))}
+            </div>
           </div>
         )}
       </main>
@@ -140,7 +114,7 @@ const Index = () => {
       <footer className="border-t border-border/50 bg-card/30 backdrop-blur-xl mt-16">
         <div className="container mx-auto px-6 py-6 text-center text-sm text-muted-foreground">
           <p>
-            Powered by {companySettings.logo} {companySettings.name} • Pluto Hub v1.0
+            Powered by {companySettings.name} • Pluto Hub v1.0
           </p>
         </div>
       </footer>

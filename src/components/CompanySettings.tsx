@@ -15,6 +15,24 @@ interface CompanySettingsProps {
 export const CompanySettings = ({ settings, onUpdate }: CompanySettingsProps) => {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState(settings);
+  const [logoPreview, setLogoPreview] = useState<string>(settings.logo || "");
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image must be less than 5MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setLogoPreview(result);
+        setFormData({ ...formData, logo: result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,14 +65,22 @@ export const CompanySettings = ({ settings, onUpdate }: CompanySettingsProps) =>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="companyLogo">Company Logo (Emoji or Text)</Label>
-            <Input
-              id="companyLogo"
-              value={formData.logo || ""}
-              onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
-              placeholder="🪐"
-              className="bg-background/50"
-            />
+            <Label htmlFor="companyLogo">Company Logo (512x512)</Label>
+            <div className="flex items-center gap-3">
+              {logoPreview && (
+                <div className="h-16 w-16 rounded-lg overflow-hidden border-2 border-primary/30">
+                  <img src={logoPreview} alt="Logo preview" className="h-full w-full object-cover" />
+                </div>
+              )}
+              <Input
+                id="companyLogo"
+                type="file"
+                accept="image/*"
+                onChange={handleLogoUpload}
+                className="bg-background/50"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">Recommended: 512x512px, max 5MB</p>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">

@@ -16,18 +16,36 @@ export const AddAppDialog = ({ onAddApp }: AddAppDialogProps) => {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    icon: "🚀",
+    icon: "",
     primaryLink: "",
     fallbackLink: "",
-    category: "",
+    category: "DevOps",
     tags: "",
     description: "",
   });
+  const [iconPreview, setIconPreview] = useState<string>("");
+
+  const handleIconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image must be less than 5MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setIconPreview(result);
+        setFormData({ ...formData, icon: result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.primaryLink || !formData.category) {
+    if (!formData.name || !formData.primaryLink || !formData.category || !formData.icon) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -44,13 +62,14 @@ export const AddAppDialog = ({ onAddApp }: AddAppDialogProps) => {
 
     setFormData({
       name: "",
-      icon: "🚀",
+      icon: "",
       primaryLink: "",
       fallbackLink: "",
-      category: "",
+      category: "DevOps",
       tags: "",
       description: "",
     });
+    setIconPreview("");
     setOpen(false);
     toast.success("Application added successfully!");
   };
@@ -83,15 +102,23 @@ export const AddAppDialog = ({ onAddApp }: AddAppDialogProps) => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="icon">
-                Icon (Emoji) <span className="text-destructive">*</span>
+                App Icon (512x512) <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="icon"
-                value={formData.icon}
-                onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                placeholder="🚀"
-                className="bg-background/50"
-              />
+              <div className="flex items-center gap-3">
+                {iconPreview && (
+                  <div className="h-16 w-16 rounded-lg overflow-hidden border-2 border-primary/30">
+                    <img src={iconPreview} alt="Icon preview" className="h-full w-full object-cover" />
+                  </div>
+                )}
+                <Input
+                  id="icon"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleIconUpload}
+                  className="bg-background/50"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Recommended: 512x512px, max 5MB</p>
             </div>
           </div>
 
@@ -126,13 +153,17 @@ export const AddAppDialog = ({ onAddApp }: AddAppDialogProps) => {
               <Label htmlFor="category">
                 Category <span className="text-destructive">*</span>
               </Label>
-              <Input
+              <select
                 id="category"
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                placeholder="e.g., DevOps"
-                className="bg-background/50"
-              />
+                className="flex h-10 w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="DevOps">DevOps</option>
+                <option value="Dashboards">Dashboards</option>
+                <option value="Monitoring">Monitoring</option>
+                <option value="Management">Management</option>
+              </select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="tags">Tags (comma-separated)</Label>

@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Astral theme - cosmic deep space colors */
+    /* Astral theme - Dark mode (default) */
     --background: 240 30% 8%;
     --foreground: 240 10% 95%;
 
@@ -49,6 +49,47 @@ All colors MUST be HSL.
     --glow-accent: 0 8px 32px hsl(280 75% 60% / 0.3);
     --shadow-card: 0 4px 24px hsl(240 50% 5% / 0.4);
   }
+
+  .light {
+    /* Astral theme - Light mode */
+    --background: 240 20% 98%;
+    --foreground: 240 30% 12%;
+
+    --card: 240 10% 100%;
+    --card-foreground: 240 30% 12%;
+
+    --popover: 240 10% 100%;
+    --popover-foreground: 240 30% 12%;
+
+    --primary: 270 70% 55%;
+    --primary-foreground: 240 10% 98%;
+
+    --secondary: 240 15% 92%;
+    --secondary-foreground: 240 30% 12%;
+
+    --muted: 240 15% 94%;
+    --muted-foreground: 240 20% 40%;
+
+    --accent: 280 65% 50%;
+    --accent-foreground: 240 10% 98%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 240 10% 98%;
+
+    --border: 240 15% 85%;
+    --input: 240 15% 90%;
+    --ring: 270 70% 55%;
+
+    /* Light mode gradients */
+    --gradient-cosmic: linear-gradient(135deg, hsl(270 70% 55%), hsl(240 65% 45%));
+    --gradient-nebula: linear-gradient(180deg, hsl(240 20% 98%), hsl(260 15% 95%));
+    --gradient-stellar: linear-gradient(90deg, hsl(280 65% 50%), hsl(270 70% 55%), hsl(220 60% 50%));
+    
+    /* Light mode glow effects */
+    --glow-primary: 0 8px 32px hsl(270 70% 55% / 0.2);
+    --glow-accent: 0 8px 32px hsl(280 65% 50% / 0.2);
+    --shadow-card: 0 4px 24px hsl(240 30% 30% / 0.1);
+  }
 }
 
 @layer base {
@@ -57,9 +98,17 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground transition-colors duration-300;
+  }
+
+  body:not(.light) {
     background-image: radial-gradient(circle at 20% 30%, hsl(270 60% 20% / 0.15) 0%, transparent 50%),
                       radial-gradient(circle at 80% 70%, hsl(280 60% 25% / 0.1) 0%, transparent 50%);
+  }
+
+  .light body {
+    background-image: radial-gradient(circle at 20% 30%, hsl(270 50% 85% / 0.3) 0%, transparent 50%),
+                      radial-gradient(circle at 80% 70%, hsl(280 50% 88% / 0.2) 0%, transparent 50%);
   }
 }
 
