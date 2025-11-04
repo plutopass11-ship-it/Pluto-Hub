@@ -1,17 +1,13 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Trash2, Pencil } from "lucide-react";
 import { App } from "@/types/app";
 import { useState } from "react";
 import { toast } from "sonner";
 
 interface AppCardProps {
   app: App;
-  onDelete: (id: string) => void;
-  onEdit: (app: App) => void;
 }
 
-export const AppCard = ({ app, onDelete, onEdit }: AppCardProps) => {
+export const AppCard = ({ app }: AppCardProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAppClick = async () => {
@@ -36,31 +32,6 @@ export const AppCard = ({ app, onDelete, onEdit }: AppCardProps) => {
       className="group relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 cursor-pointer animate-fade-in"
       onClick={handleAppClick}
     >
-      <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 hover:bg-primary/10 text-primary"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(app);
-          }}
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(app.id);
-          }}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-      
       <CardContent className="p-6 flex flex-col items-center gap-3">
         <div className="flex items-center justify-center">
           {app.icon ? (

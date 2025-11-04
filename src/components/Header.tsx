@@ -1,4 +1,4 @@
-import { CompanySettings as CompanySettingsType } from "@/types/app";
+import { CompanySettings as CompanySettingsType, App } from "@/types/app";
 import { CompanySettings } from "./CompanySettings";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,9 +7,13 @@ import { useState, useEffect } from "react";
 interface HeaderProps {
   settings: CompanySettingsType;
   onUpdateSettings: (settings: CompanySettingsType) => void;
+  apps: App[];
+  onAddApp: (app: Omit<App, "id">) => void;
+  onEditApp: (id: string, app: Omit<App, "id">) => void;
+  onDeleteApp: (id: string) => void;
 }
 
-export const Header = ({ settings, onUpdateSettings }: HeaderProps) => {
+export const Header = ({ settings, onUpdateSettings, apps, onAddApp, onEditApp, onDeleteApp }: HeaderProps) => {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
 
   useEffect(() => {
@@ -46,7 +50,14 @@ export const Header = ({ settings, onUpdateSettings }: HeaderProps) => {
           >
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
-          <CompanySettings settings={settings} onUpdate={onUpdateSettings} />
+          <CompanySettings 
+            settings={settings} 
+            onUpdate={onUpdateSettings}
+            apps={apps}
+            onAddApp={onAddApp}
+            onEditApp={onEditApp}
+            onDeleteApp={onDeleteApp}
+          />
         </div>
       </div>
     </header>

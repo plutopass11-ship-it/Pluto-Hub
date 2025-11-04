@@ -104,7 +104,14 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header settings={companySettings} onUpdateSettings={setCompanySettings} />
+      <Header 
+        settings={companySettings} 
+        onUpdateSettings={setCompanySettings}
+        apps={apps}
+        onAddApp={handleAddApp}
+        onEditApp={handleEditApp}
+        onDeleteApp={handleDeleteApp}
+      />
 
       <main className="container mx-auto px-6 py-8 flex-1">
         <div className="mb-8 space-y-6">
@@ -113,7 +120,6 @@ const Index = () => {
               <h2 className="text-3xl font-bold text-foreground mb-2">Pluto Hub</h2>
               <p className="text-muted-foreground">Access all your applications and links</p>
             </div>
-            <AddAppDialog onAddApp={handleAddApp} />
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -171,8 +177,6 @@ const Index = () => {
                       <AppCard 
                         key={app.id} 
                         app={app} 
-                        onDelete={handleDeleteApp}
-                        onEdit={handleEditClick}
                       />
                     ))}
                   </div>
@@ -200,12 +204,6 @@ const Index = () => {
         </div>
       </footer>
 
-      <EditAppDialog
-        app={editingApp}
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        onEditApp={handleEditApp}
-      />
     </div>
   );
 };
