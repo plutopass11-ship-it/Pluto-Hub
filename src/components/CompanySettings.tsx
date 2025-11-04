@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Trash2, Pencil, Plus } from "lucide-react";
+import { Settings, Trash2, Pencil } from "lucide-react";
 import { CompanySettings as CompanySettingsType, App } from "@/types/app";
 import { toast } from "sonner";
 import { AddAppDialog } from "./AddAppDialog";
 import { EditAppDialog } from "./EditAppDialog";
+import { uploadImageToStorage } from "@/utils/uploadToStorage";
 
 interface CompanySettingsProps {
   settings: CompanySettingsType;
@@ -23,6 +24,7 @@ export const CompanySettings = ({ settings, onUpdate, apps, onAddApp, onEditApp,
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState(settings);
   const [logoPreview, setLogoPreview] = useState<string>(settings.logo || "");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [editingApp, setEditingApp] = useState<App | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
@@ -33,20 +35,29 @@ export const CompanySettings = ({ settings, onUpdate, apps, onAddApp, onEditApp,
         toast.error("Image must be less than 5MB");
         return;
       }
+      setLogoFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        const result = reader.result as string;
-        setLogoPreview(result);
-        setFormData({ ...formData, logo: result });
+        setLogoPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onUpdate(formData);
-    toast.success("Company settings updated!");
+    
+    try {
+      let logoUrl = formData.logo;
+      if (logoFile) {
+        logoUrl = await uploadImageToStorage(logoFile, "logos");
+      }
+      
+      onUpdate({ ...formData, logo: logoUrl });
+      setLogoFile(null);
+    } catch (error) {
+      toast.error("Failed to upload logo");
+    }
   };
 
   const handleEditClick = (app: App) => {
@@ -57,7 +68,6 @@ export const CompanySettings = ({ settings, onUpdate, apps, onAddApp, onEditApp,
   const handleDeleteClick = (id: string) => {
     if (window.confirm("Are you sure you want to delete this application?")) {
       onDeleteApp(id);
-      toast.success("Application deleted successfully!");
     }
   };
 
@@ -150,7 +160,7 @@ export const CompanySettings = ({ settings, onUpdate, apps, onAddApp, onEditApp,
                     
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-foreground truncate">{app.name}</h4>
-                      <p className="text-sm text-muted-foreground truncate">{app.primaryLink}</p>
+                      <p className="text-sm text-muted-foreground truncate">{app.primary_link}</p>
                     </div>
 
                     <div className="flex gap-2 flex-shrink-0">

@@ -53,6 +53,27 @@ export type Database = {
         }
         Relationships: []
       }
+      company_settings: {
+        Row: {
+          id: string
+          logo: string | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          logo?: string | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          logo?: string | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       quick_links: {
         Row: {
           category: string

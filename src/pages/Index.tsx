@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { App, CompanySettings as CompanySettingsType, QuickLink } from "@/types/app";
 import { Header } from "@/components/Header";
 import { AppCard } from "@/components/AppCard";
@@ -9,51 +10,59 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Index = () => {
-  const [apps, setApps] = useState<App[]>([]);
-  const [quickLinks, setQuickLinks] = useState<QuickLink[]>([]);
-  const [companySettings, setCompanySettings] = useState<CompanySettingsType>({
-    name: "Flying Pluto",
-    logo: "",
-  });
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [editingApp, setEditingApp] = useState<App | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("apps");
 
-  // Load data from localStorage
-  useEffect(() => {
-    const savedApps = localStorage.getItem("pluto-hub-apps");
-    const savedLinks = localStorage.getItem("pluto-hub-quick-links");
-    const savedSettings = localStorage.getItem("pluto-hub-settings");
+  // Fetch apps from database
+  const { data: apps = [] } = useQuery({
+    queryKey: ['apps'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('apps')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as App[];
+    },
+  });
 
-    if (savedApps) {
-      setApps(JSON.parse(savedApps));
-    }
-    if (savedLinks) {
-      setQuickLinks(JSON.parse(savedLinks));
-    }
-    if (savedSettings) {
-      setCompanySettings(JSON.parse(savedSettings));
-    }
-  }, []);
+  // Fetch quick links from database
+  const { data: quickLinks = [] } = useQuery({
+    queryKey: ['quick_links'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('quick_links')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as QuickLink[];
+    },
+  });
 
-  // Save apps to localStorage
-  useEffect(() => {
-    localStorage.setItem("pluto-hub-apps", JSON.stringify(apps));
-  }, [apps]);
-
-  // Save quick links to localStorage
-  useEffect(() => {
-    localStorage.setItem("pluto-hub-quick-links", JSON.stringify(quickLinks));
-  }, [quickLinks]);
-
-  // Save company settings to localStorage
-  useEffect(() => {
-    localStorage.setItem("pluto-hub-settings", JSON.stringify(companySettings));
-  }, [companySettings]);
+  // Fetch company settings from database
+  const { data: companySettings } = useQuery({
+    queryKey: ['company_settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('company_settings')
+        .select('*')
+        .limit(1)
+        .single();
+      
+      if (error) throw error;
+      return data as CompanySettingsType;
+    },
+  });
 
   const categories = useMemo(() => {
     const cats = new Set(apps.map((app) => app.category));
@@ -73,16 +82,155 @@ const Index = () => {
     });
   }, [apps, searchQuery, selectedCategory]);
 
+  const addAppMutation = useMutation({
+    mutationFn: async (newApp: Omit<App, "id">) => {
+      const { data, error } = await supabase
+        .from('apps')
+        .insert([newApp])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['apps'] });
+      toast.success("Application added successfully");
+    },
+    onError: () => {
+      toast.error("Failed to add application");
+    },
+  });
+
+  const editAppMutation = useMutation({
+    mutationFn: async ({ id, app }: { id: string; app: Omit<App, "id"> }) => {
+      const { data, error } = await supabase
+        .from('apps')
+        .update(app)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['apps'] });
+      toast.success("Application updated successfully");
+    },
+    onError: () => {
+      toast.error("Failed to update application");
+    },
+  });
+
+  const deleteAppMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('apps')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['apps'] });
+      toast.success("Application deleted successfully");
+    },
+    onError: () => {
+      toast.error("Failed to delete application");
+    },
+  });
+
+  const addQuickLinkMutation = useMutation({
+    mutationFn: async (newLink: Omit<QuickLink, "id">) => {
+      const { data, error } = await supabase
+        .from('quick_links')
+        .insert([newLink])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quick_links'] });
+      toast.success("Quick link added successfully");
+    },
+    onError: () => {
+      toast.error("Failed to add quick link");
+    },
+  });
+
+  const editQuickLinkMutation = useMutation({
+    mutationFn: async ({ id, link }: { id: string; link: Omit<QuickLink, "id"> }) => {
+      const { data, error } = await supabase
+        .from('quick_links')
+        .update(link)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quick_links'] });
+      toast.success("Quick link updated successfully");
+    },
+    onError: () => {
+      toast.error("Failed to update quick link");
+    },
+  });
+
+  const deleteQuickLinkMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('quick_links')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quick_links'] });
+      toast.success("Quick link deleted successfully");
+    },
+    onError: () => {
+      toast.error("Failed to delete quick link");
+    },
+  });
+
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (settings: CompanySettingsType) => {
+      const { data, error } = await supabase
+        .from('company_settings')
+        .update({ name: settings.name, logo: settings.logo })
+        .eq('id', companySettings?.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['company_settings'] });
+      toast.success("Settings updated successfully");
+    },
+    onError: () => {
+      toast.error("Failed to update settings");
+    },
+  });
+
   const handleAddApp = (newApp: Omit<App, "id">) => {
-    setApps([...apps, { ...newApp, id: Date.now().toString() }]);
+    addAppMutation.mutate(newApp);
   };
 
   const handleEditApp = (id: string, updatedApp: Omit<App, "id">) => {
-    setApps(apps.map((app) => (app.id === id ? { ...updatedApp, id } : app)));
+    editAppMutation.mutate({ id, app: updatedApp });
   };
 
   const handleDeleteApp = (id: string) => {
-    setApps(apps.filter((app) => app.id !== id));
+    deleteAppMutation.mutate(id);
   };
 
   const handleEditClick = (app: App) => {
@@ -91,22 +239,26 @@ const Index = () => {
   };
 
   const handleAddQuickLink = (newLink: Omit<QuickLink, "id">) => {
-    setQuickLinks([...quickLinks, { ...newLink, id: Date.now().toString() }]);
+    addQuickLinkMutation.mutate(newLink);
   };
 
   const handleEditQuickLink = (id: string, updatedLink: Omit<QuickLink, "id">) => {
-    setQuickLinks(quickLinks.map((link) => (link.id === id ? { ...updatedLink, id } : link)));
+    editQuickLinkMutation.mutate({ id, link: updatedLink });
   };
 
   const handleDeleteQuickLink = (id: string) => {
-    setQuickLinks(quickLinks.filter((link) => link.id !== id));
+    deleteQuickLinkMutation.mutate(id);
+  };
+
+  const handleUpdateSettings = (settings: CompanySettingsType) => {
+    updateSettingsMutation.mutate(settings);
   };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header 
-        settings={companySettings} 
-        onUpdateSettings={setCompanySettings}
+        settings={companySettings || { name: "Pluto Hub", logo: "" }} 
+        onUpdateSettings={handleUpdateSettings}
         apps={apps}
         onAddApp={handleAddApp}
         onEditApp={handleEditApp}
@@ -199,7 +351,7 @@ const Index = () => {
       <footer className="border-t border-border/50 bg-card/30 backdrop-blur-xl mt-auto">
         <div className="container mx-auto px-6 py-6 text-center text-sm text-muted-foreground">
           <p>
-            Powered by {companySettings.name} • Pluto Hub v1.0
+            Powered by {companySettings?.name || "Pluto Hub"} • Pluto Hub v1.0
           </p>
         </div>
       </footer>

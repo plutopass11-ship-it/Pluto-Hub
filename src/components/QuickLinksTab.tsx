@@ -25,7 +25,6 @@ export const QuickLinksTab = ({ links, onAddLink, onEditLink, onDeleteLink }: Qu
 
   const handleDelete = (id: string) => {
     onDeleteLink(id);
-    toast.success("Quick link deleted");
   };
 
   const groupedLinks = links.reduce((acc, link) => {

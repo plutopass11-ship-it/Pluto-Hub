@@ -13,12 +13,12 @@ export const AppCard = ({ app }: AppCardProps) => {
   const handleAppClick = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(app.primaryLink, { method: "HEAD", mode: "no-cors" });
-      window.open(app.primaryLink, "_blank");
+      const response = await fetch(app.primary_link, { method: "HEAD", mode: "no-cors" });
+      window.open(app.primary_link, "_blank");
     } catch (error) {
-      if (app.fallbackLink) {
+      if (app.fallback_link) {
         toast.info("Primary link unavailable, trying fallback...");
-        window.open(app.fallbackLink, "_blank");
+        window.open(app.fallback_link, "_blank");
       } else {
         toast.error("Application is currently unavailable");
       }

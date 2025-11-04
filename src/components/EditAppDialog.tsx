@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { App } from "@/types/app";
 import { toast } from "sonner";
+import { uploadImageToStorage } from "@/utils/uploadToStorage";
 
 interface EditAppDialogProps {
   app: App | null;
@@ -18,21 +19,22 @@ export const EditAppDialog = ({ app, open, onOpenChange, onEditApp }: EditAppDia
   const [formData, setFormData] = useState({
     name: "",
     icon: "",
-    primaryLink: "",
-    fallbackLink: "",
+    primary_link: "",
+    fallback_link: "",
     category: "DevOps",
     tags: "",
     description: "",
   });
   const [iconPreview, setIconPreview] = useState<string>("");
+  const [iconFile, setIconFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (app) {
       setFormData({
         name: app.name,
         icon: app.icon,
-        primaryLink: app.primaryLink,
-        fallbackLink: app.fallbackLink || "",
+        primary_link: app.primary_link,
+        fallback_link: app.fallback_link || "",
         category: app.category,
         tags: app.tags.join(", "),
         description: app.description || "",
@@ -48,38 +50,46 @@ export const EditAppDialog = ({ app, open, onOpenChange, onEditApp }: EditAppDia
         toast.error("Image must be less than 5MB");
         return;
       }
+      setIconFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        const result = reader.result as string;
-        setIconPreview(result);
-        setFormData({ ...formData, icon: result });
+        setIconPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.primaryLink || !formData.category) {
+    if (!formData.name || !formData.primary_link || !formData.category) {
       toast.error("Please fill in all required fields");
       return;
     }
 
     if (!app) return;
 
-    onEditApp(app.id, {
-      name: formData.name,
-      icon: formData.icon,
-      primaryLink: formData.primaryLink,
-      fallbackLink: formData.fallbackLink || undefined,
-      category: formData.category,
-      tags: formData.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
-      description: formData.description || undefined,
-    });
+    try {
+      let iconUrl = formData.icon;
+      if (iconFile) {
+        iconUrl = await uploadImageToStorage(iconFile, "icons");
+      }
 
-    onOpenChange(false);
-    toast.success("Application updated successfully!");
+      onEditApp(app.id, {
+        name: formData.name,
+        icon: iconUrl,
+        primary_link: formData.primary_link,
+        fallback_link: formData.fallback_link || undefined,
+        category: formData.category,
+        tags: formData.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
+        description: formData.description || undefined,
+      });
+
+      setIconFile(null);
+      onOpenChange(false);
+    } catch (error) {
+      toast.error("Failed to upload icon");
+    }
   };
 
   return (
@@ -131,8 +141,8 @@ export const EditAppDialog = ({ app, open, onOpenChange, onEditApp }: EditAppDia
             <Input
               id="edit-primaryLink"
               type="url"
-              value={formData.primaryLink}
-              onChange={(e) => setFormData({ ...formData, primaryLink: e.target.value })}
+              value={formData.primary_link}
+              onChange={(e) => setFormData({ ...formData, primary_link: e.target.value })}
               placeholder="https://app.example.com"
               className="bg-background/50"
             />
@@ -143,8 +153,8 @@ export const EditAppDialog = ({ app, open, onOpenChange, onEditApp }: EditAppDia
             <Input
               id="edit-fallbackLink"
               type="url"
-              value={formData.fallbackLink}
-              onChange={(e) => setFormData({ ...formData, fallbackLink: e.target.value })}
+              value={formData.fallback_link}
+              onChange={(e) => setFormData({ ...formData, fallback_link: e.target.value })}
               placeholder="https://backup.example.com"
               className="bg-background/50"
             />

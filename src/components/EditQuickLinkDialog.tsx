@@ -47,7 +47,6 @@ export const EditQuickLinkDialog = ({ link, open, onOpenChange, onEditLink }: Ed
     });
 
     onOpenChange(false);
-    toast.success("Quick link updated successfully!");
   };
 
   return (

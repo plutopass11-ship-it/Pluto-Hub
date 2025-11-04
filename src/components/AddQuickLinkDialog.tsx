@@ -39,7 +39,6 @@ export const AddQuickLinkDialog = ({ onAddLink }: AddQuickLinkDialogProps) => {
       category: "General",
     });
     setOpen(false);
-    toast.success("Quick link added successfully!");
   };
 
   return (
