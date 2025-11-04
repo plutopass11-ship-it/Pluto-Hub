@@ -1,19 +1,20 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus } from "lucide-react";
 import { App } from "@/types/app";
 import { toast } from "sonner";
 
-interface AddAppDialogProps {
-  onAddApp: (app: Omit<App, "id">) => void;
+interface EditAppDialogProps {
+  app: App | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onEditApp: (id: string, app: Omit<App, "id">) => void;
 }
 
-export const AddAppDialog = ({ onAddApp }: AddAppDialogProps) => {
-  const [open, setOpen] = useState(false);
+export const EditAppDialog = ({ app, open, onOpenChange, onEditApp }: EditAppDialogProps) => {
   const [formData, setFormData] = useState({
     name: "",
     icon: "",
@@ -24,6 +25,21 @@ export const AddAppDialog = ({ onAddApp }: AddAppDialogProps) => {
     description: "",
   });
   const [iconPreview, setIconPreview] = useState<string>("");
+
+  useEffect(() => {
+    if (app) {
+      setFormData({
+        name: app.name,
+        icon: app.icon,
+        primaryLink: app.primaryLink,
+        fallbackLink: app.fallbackLink || "",
+        category: app.category,
+        tags: app.tags.join(", "),
+        description: app.description || "",
+      });
+      setIconPreview(app.icon);
+    }
+  }, [app]);
 
   const handleIconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -50,7 +66,9 @@ export const AddAppDialog = ({ onAddApp }: AddAppDialogProps) => {
       return;
     }
 
-    onAddApp({
+    if (!app) return;
+
+    onEditApp(app.id, {
       name: formData.name,
       icon: formData.icon,
       primaryLink: formData.primaryLink,
@@ -60,40 +78,24 @@ export const AddAppDialog = ({ onAddApp }: AddAppDialogProps) => {
       description: formData.description || undefined,
     });
 
-    setFormData({
-      name: "",
-      icon: "",
-      primaryLink: "",
-      fallbackLink: "",
-      category: "DevOps",
-      tags: "",
-      description: "",
-    });
-    setIconPreview("");
-    setOpen(false);
-    toast.success("Application added successfully!");
+    onOpenChange(false);
+    toast.success("Application updated successfully!");
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg">
-          <Plus className="h-4 w-4" />
-          Add Application
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl border-border/50 bg-card/95 backdrop-blur-xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Add New Application</DialogTitle>
+          <DialogTitle className="text-2xl">Edit Application</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">
+              <Label htmlFor="edit-name">
                 Application Name <span className="text-destructive">*</span>
               </Label>
               <Input
-                id="name"
+                id="edit-name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., Portainer"
@@ -101,7 +103,7 @@ export const AddAppDialog = ({ onAddApp }: AddAppDialogProps) => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="icon">
+              <Label htmlFor="edit-icon">
                 App Icon (512x512) (Optional)
               </Label>
               <div className="flex items-center gap-3">
@@ -111,7 +113,7 @@ export const AddAppDialog = ({ onAddApp }: AddAppDialogProps) => {
                   </div>
                 )}
                 <Input
-                  id="icon"
+                  id="edit-icon"
                   type="file"
                   accept="image/*"
                   onChange={handleIconUpload}
@@ -123,11 +125,11 @@ export const AddAppDialog = ({ onAddApp }: AddAppDialogProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="primaryLink">
+            <Label htmlFor="edit-primaryLink">
               Primary Link <span className="text-destructive">*</span>
             </Label>
             <Input
-              id="primaryLink"
+              id="edit-primaryLink"
               type="url"
               value={formData.primaryLink}
               onChange={(e) => setFormData({ ...formData, primaryLink: e.target.value })}
@@ -137,9 +139,9 @@ export const AddAppDialog = ({ onAddApp }: AddAppDialogProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="fallbackLink">Fallback Link (Optional)</Label>
+            <Label htmlFor="edit-fallbackLink">Fallback Link (Optional)</Label>
             <Input
-              id="fallbackLink"
+              id="edit-fallbackLink"
               type="url"
               value={formData.fallbackLink}
               onChange={(e) => setFormData({ ...formData, fallbackLink: e.target.value })}
@@ -150,11 +152,11 @@ export const AddAppDialog = ({ onAddApp }: AddAppDialogProps) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="category">
+              <Label htmlFor="edit-category">
                 Category <span className="text-destructive">*</span>
               </Label>
               <select
-                id="category"
+                id="edit-category"
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 className="flex h-10 w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -166,9 +168,9 @@ export const AddAppDialog = ({ onAddApp }: AddAppDialogProps) => {
               </select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="tags">Tags (comma-separated)</Label>
+              <Label htmlFor="edit-tags">Tags (comma-separated)</Label>
               <Input
-                id="tags"
+                id="edit-tags"
                 value={formData.tags}
                 onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
                 placeholder="docker, containers, monitoring"
@@ -178,9 +180,9 @@ export const AddAppDialog = ({ onAddApp }: AddAppDialogProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description (Optional)</Label>
+            <Label htmlFor="edit-description">Description (Optional)</Label>
             <Textarea
-              id="description"
+              id="edit-description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Brief description of the application..."
@@ -190,11 +192,11 @@ export const AddAppDialog = ({ onAddApp }: AddAppDialogProps) => {
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" className="bg-gradient-cosmic hover:opacity-90 transition-opacity">
-              Add Application
+            <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+              Save Changes
             </Button>
           </div>
         </form>

@@ -9,6 +9,13 @@ export interface App {
   description?: string;
 }
 
+export interface QuickLink {
+  id: string;
+  name: string;
+  url: string;
+  category: string;
+}
+
 export interface CompanySettings {
   name: string;
   logo?: string;

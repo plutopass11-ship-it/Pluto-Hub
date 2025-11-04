@@ -35,7 +35,6 @@ export const Header = ({ settings, onUpdateSettings }: HeaderProps) => {
             <h1 className="text-2xl font-bold bg-gradient-stellar bg-clip-text text-transparent">
               {settings.name}
             </h1>
-            <p className="text-sm text-muted-foreground">Application Hub</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
