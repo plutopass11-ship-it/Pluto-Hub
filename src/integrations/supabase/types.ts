@@ -53,6 +53,33 @@ export type Database = {
         }
         Relationships: []
       }
+      quick_links: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+          url: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+          url: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
