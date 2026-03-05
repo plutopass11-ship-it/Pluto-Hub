@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local data
+pluto-data/
+
+# Stray images
+1767597564016-FBBannerv3.png

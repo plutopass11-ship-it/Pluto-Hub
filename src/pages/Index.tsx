@@ -9,9 +9,10 @@ import { QuickLinksTab } from "@/components/QuickLinksTab";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { localData } from "@/services/localData";
 
 const Index = () => {
   const queryClient = useQueryClient();
@@ -21,47 +22,22 @@ const Index = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("apps");
 
-  // Fetch apps from database
+  // Fetch apps from local storage
   const { data: apps = [] } = useQuery({
     queryKey: ['apps'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('apps')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as App[];
-    },
+    queryFn: localData.getApps,
   });
 
-  // Fetch quick links from database
+  // Fetch quick links from local storage
   const { data: quickLinks = [] } = useQuery({
     queryKey: ['quick_links'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quick_links')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as QuickLink[];
-    },
+    queryFn: localData.getQuickLinks,
   });
 
-  // Fetch company settings from database
+  // Fetch company settings from local storage
   const { data: companySettings } = useQuery({
     queryKey: ['company_settings'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('company_settings')
-        .select('*')
-        .limit(1)
-        .single();
-      
-      if (error) throw error;
-      return data as CompanySettingsType;
-    },
+    queryFn: localData.getSettings,
   });
 
   const categories = useMemo(() => {
@@ -83,37 +59,18 @@ const Index = () => {
   }, [apps, searchQuery, selectedCategory]);
 
   const addAppMutation = useMutation({
-    mutationFn: async (newApp: Omit<App, "id">) => {
-      const { data, error } = await supabase
-        .from('apps')
-        .insert([newApp])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
+    mutationFn: (newApp: Omit<App, "id">) => localData.addApp(newApp),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['apps'] });
       toast.success("Application added successfully");
     },
-    onError: () => {
-      toast.error("Failed to add application");
+    onError: (error) => {
+      toast.error(`Failed to add application: ${error.message}`);
     },
   });
 
   const editAppMutation = useMutation({
-    mutationFn: async ({ id, app }: { id: string; app: Omit<App, "id"> }) => {
-      const { data, error } = await supabase
-        .from('apps')
-        .update(app)
-        .eq('id', id)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
+    mutationFn: ({ id, app }: { id: string; app: Omit<App, "id"> }) => localData.updateApp(id, app),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['apps'] });
       toast.success("Application updated successfully");
@@ -124,14 +81,7 @@ const Index = () => {
   });
 
   const deleteAppMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('apps')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => localData.deleteApp(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['apps'] });
       toast.success("Application deleted successfully");
@@ -142,16 +92,7 @@ const Index = () => {
   });
 
   const addQuickLinkMutation = useMutation({
-    mutationFn: async (newLink: Omit<QuickLink, "id">) => {
-      const { data, error } = await supabase
-        .from('quick_links')
-        .insert([newLink])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
+    mutationFn: (newLink: Omit<QuickLink, "id">) => localData.addQuickLink(newLink),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quick_links'] });
       toast.success("Quick link added successfully");
@@ -162,17 +103,7 @@ const Index = () => {
   });
 
   const editQuickLinkMutation = useMutation({
-    mutationFn: async ({ id, link }: { id: string; link: Omit<QuickLink, "id"> }) => {
-      const { data, error } = await supabase
-        .from('quick_links')
-        .update(link)
-        .eq('id', id)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
+    mutationFn: ({ id, link }: { id: string; link: Omit<QuickLink, "id"> }) => localData.updateQuickLink(id, link),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quick_links'] });
       toast.success("Quick link updated successfully");
@@ -183,14 +114,7 @@ const Index = () => {
   });
 
   const deleteQuickLinkMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('quick_links')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => localData.deleteQuickLink(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quick_links'] });
       toast.success("Quick link deleted successfully");
@@ -201,17 +125,7 @@ const Index = () => {
   });
 
   const updateSettingsMutation = useMutation({
-    mutationFn: async (settings: CompanySettingsType) => {
-      const { data, error } = await supabase
-        .from('company_settings')
-        .update({ name: settings.name, logo: settings.logo })
-        .eq('id', companySettings?.id)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
+    mutationFn: localData.updateSettings,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['company_settings'] });
       toast.success("Settings updated successfully");
@@ -256,8 +170,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header 
-        settings={companySettings || { name: "Pluto Hub", logo: "" }} 
+      <Header
+        settings={companySettings || { name: "Pluto Hub", logo: "" }}
         onUpdateSettings={handleUpdateSettings}
         apps={apps}
         onAddApp={handleAddApp}
@@ -316,19 +230,30 @@ const Index = () => {
                 <div className="flex flex-col items-center justify-center py-20">
                   <div className="text-6xl mb-4 opacity-50">🚀</div>
                   <h3 className="text-xl font-semibold text-foreground mb-2">No applications found</h3>
-                  <p className="text-muted-foreground text-center max-w-md">
+                  <p className="text-muted-foreground text-center max-w-md mb-6">
                     {searchQuery || selectedCategory
                       ? "Try adjusting your filters or search query"
                       : "Get started by adding your first application"}
                   </p>
+                  {!searchQuery && !selectedCategory && (
+                    <Button
+                      onClick={async () => {
+                        await localData.resetData();
+                        window.location.reload();
+                      }}
+                      variant="outline"
+                    >
+                      Load Example Data
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div className="flex justify-center">
                   <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 max-w-7xl">
                     {filteredApps.map((app) => (
-                      <AppCard 
-                        key={app.id} 
-                        app={app} 
+                      <AppCard
+                        key={app.id}
+                        app={app}
                       />
                     ))}
                   </div>
@@ -351,7 +276,7 @@ const Index = () => {
       <footer className="border-t border-border/50 bg-card/30 backdrop-blur-xl mt-auto">
         <div className="container mx-auto px-6 py-6 text-center text-sm text-muted-foreground">
           <p>
-            Powered by {companySettings?.name || "Pluto Hub"} • Pluto Hub v1.0
+            Powered by {companySettings?.name || "Pluto Hub"} • Pluto Hub v1.1
           </p>
         </div>
       </footer>
